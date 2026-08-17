@@ -136,7 +136,7 @@ A play is an implicit positive, and playcount is a graded signal. Positives are 
 
 - `GET /recommend?user=<lastfm_username>&k=20` (FastAPI): live-fetch the user's top artists → build query embedding → FAISS ANN search → ranked artists with tags.
 - Cold-start: falls back to the popularity baseline when a user has no overlap with the training catalogue (private profile, or every top artist is outside it).
-- Latency (local, single request, cold cache): p50 ≈ 1190 ms, p99 ≈ 1220 ms — dominated by the live Last.fm API round-trip (2 sequential rate-limited calls to fetch top artists), not model inference, which is a brute-force FAISS lookup over 129,550 x 128 floats. Dockerised; deployed on Render.
+- Latency (local, single request, cold cache): p50 ≈ 1190 ms, p99 ≈ 1220 ms — dominated by the live Last.fm API round-trip (2 sequential rate-limited calls to fetch top artists), not model inference, which is a precomputed-embedding lookup + FAISS search over 129,550 x 128 floats. Dockerised; deployed on a [Hugging Face Space](https://huggingface.co/spaces/linusraaen/lastfm-recommender-demo) (Docker SDK).
 
 ## Repo structure
 
@@ -145,7 +145,7 @@ data/                  # crawl + processed output (git-ignored; NOT committed)
   raw/                  # interactions.jsonl, scrobbles.jsonl, artists.jsonl, state.json
   processed/             # matrix.parquet, split/{train,test}.parquet, artist_features.parquet, artist_ids.json
 models/                 # trained towers, artist embeddings, FAISS index (git-ignored)
-artifact_dist/          # staged copy of the ~500MB serving artifacts, ready to upload (git-ignored)
+artifact_dist/          # staged copy of the ~206MB serving artifacts, ready to upload (git-ignored)
 src/
   config.py              # shared paths + hyperparameters
   collect.py              # Last.fm crawler
@@ -158,8 +158,7 @@ app/                    # Streamlit demo
 scripts/
   stage_artifacts.py       # collects serving artifacts into artifact_dist/ for upload to HF Hub
 tests/                  # pytest suite (synthetic data, no real crawl needed)
-start.sh                # combined FastAPI + Streamlit entrypoint (single-port container hosts)
-render.yaml             # Render blueprint -- connect this repo in the Render dashboard to deploy
+start.sh                # combined FastAPI + Streamlit entrypoint (the Space's container command)
 Makefile
 Dockerfile
 requirements.txt

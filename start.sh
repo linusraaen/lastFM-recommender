@@ -1,8 +1,9 @@
 #!/bin/sh
 # Container entrypoint for hosting FastAPI + Streamlit together in one
-# process (deployed on Render, see render.yaml). The externally-exposed
-# process is Streamlit; it binds to $PORT (Render injects this), falling
-# back to 7860 for local runs where nothing sets it.
+# process, as the Hugging Face Space's container command (Docker SDK --
+# see the YAML config block at the top of README.md). The externally-exposed
+# process is Streamlit; it binds to $PORT if the platform injects one,
+# else 7860 (the Space's app_port, and the local-run default).
 set -e
 
 if [ -n "$HF_MODEL_REPO" ]; then
@@ -12,8 +13,8 @@ elif [ -f "models/user_tower.pt" ]; then
   echo "HF_MODEL_REPO is not set -- using local data/ and models/ artifacts."
 else
   echo "ERROR: HF_MODEL_REPO is not set, and no local artifacts were found at models/user_tower.pt." >&2
-  echo "Set HF_MODEL_REPO in this environment (Render's dashboard -> Environment tab if it wasn't" >&2
-  echo "deployed via the render.yaml Blueprint), or mount data/ and models/ locally." >&2
+  echo "Set HF_MODEL_REPO as a Space variable (Settings -> Variables and secrets), or mount" >&2
+  echo "data/ and models/ locally." >&2
   exit 1
 fi
 

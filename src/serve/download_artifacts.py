@@ -2,7 +2,7 @@
 Pulls the trained model artifacts from a Hugging Face Hub model repo into the
 local paths src/config.py expects. Run this before starting the API in any
 environment that doesn't already have data/ and models/ populated (e.g. a
-freshly-built container on Render) -- see start.sh.
+freshly-built container on a Hugging Face Space) -- see start.sh.
 
     HF_MODEL_REPO=<your-username>/<repo-name> python -m src.serve.download_artifacts
 

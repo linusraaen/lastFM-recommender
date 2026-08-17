@@ -1,5 +1,6 @@
 # Serves the FastAPI /recommend endpoint + Streamlit demo together in one
-# container (start.sh), deployed on Render (see render.yaml).
+# container (start.sh), deployed as a Hugging Face Space (Docker SDK --
+# see the YAML config block at the top of README.md).
 # Model artifacts are NOT baked into the image -- start.sh downloads them at
 # container startup from a Hugging Face Hub model repo (set HF_MODEL_REPO),
 # via src/serve/download_artifacts.py. This keeps the image small and
