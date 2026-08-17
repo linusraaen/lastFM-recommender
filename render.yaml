@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: lastfm-recommender-demo
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: HF_MODEL_REPO
+        value: linusraaen/lastfm-two-tower
+      - key: LASTFM_API_KEY
+        sync: false # set manually in the Render dashboard -- never committed here

@@ -1,0 +1,12 @@
+.git/
+.pytest_cache/
+__pycache__/
+tests/
+*.md
+# artifacts are downloaded at container startup (see start.sh), never baked
+# into the image -- keep the local copies out of the build context entirely.
+data/
+models/
+artifact_dist/
+.venv/
+venv/

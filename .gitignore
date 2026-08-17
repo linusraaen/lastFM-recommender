@@ -1,0 +1,14 @@
+data/raw/
+data/processed/
+models/*.pt
+models/*.faiss
+models/*.npy
+artifact_dist/
+*.pyc
+__pycache__/
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+.DS_Store
+.env
