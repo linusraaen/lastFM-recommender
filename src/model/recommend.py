@@ -4,6 +4,16 @@ playcount-weighted history, then rank the artist catalog by dot product.
 Used by both the eval harness (src/eval/evaluate.py, brute-force ranking is
 plenty fast at this catalog size) and live serving (src/serve/api.py, which
 swaps the brute-force step for a FAISS ANN lookup).
+
+Context artists (the user's history the query is pooled from) are always
+already-in-catalogue artists -- anything else gets filtered out before
+reaching here (see src/features/user_features.py:history_from_live_top_artists
+and build_matrix.py, which both only ever produce catalogue artist_ids). So
+their embeddings are already sitting in artist_embeddings.npy from training;
+there's no need to reload the raw content features and re-run the item tower
+per request. That matters in practice: the raw feature matrix is the single
+largest artifact (hundreds of MB at a 100K+ item catalogue) and was the
+direct cause of an OOM in a memory-constrained deploy.
 """
 
 from __future__ import annotations
@@ -15,8 +25,7 @@ import pandas as pd
 import torch
 
 from src import config
-from src.model.dataset import build_artist_feature_matrix
-from src.model.towers import ItemTower, UserTower
+from src.model.towers import UserTower
 
 
 class TwoTowerRecommender:
@@ -31,25 +40,13 @@ class TwoTowerRecommender:
     def load(self) -> "TwoTowerRecommender":
         artist_ids: dict[str, int] = json.loads(config.ARTIST_ID_MAP_PATH.read_text())
         self.id_to_artist = {v: k for k, v in artist_ids.items()}
-        num_artists = len(artist_ids)
 
-        features_df = pd.read_parquet(config.ARTIST_FEATURES_PATH)
-        feature_matrix = build_artist_feature_matrix(features_df, num_artists)
-        self.feature_matrix = torch.from_numpy(feature_matrix).to(self.device)
-
-        self.item_tower = ItemTower(feature_matrix.shape[1], config.HIDDEN_DIM, config.EMBED_DIM).to(self.device)
-        self.item_tower.load_state_dict(torch.load(config.ITEM_TOWER_PATH, map_location=self.device))
-        self.item_tower.eval()
+        self.artist_embeddings = np.load(config.ARTIST_EMBEDDINGS_PATH)
+        self._embeddings_tensor = torch.from_numpy(self.artist_embeddings).to(self.device)
 
         self.user_tower = UserTower(config.EMBED_DIM, config.HIDDEN_DIM).to(self.device)
         self.user_tower.load_state_dict(torch.load(config.USER_TOWER_PATH, map_location=self.device))
         self.user_tower.eval()
-
-        if config.ARTIST_EMBEDDINGS_PATH.exists():
-            self.artist_embeddings = np.load(config.ARTIST_EMBEDDINGS_PATH)
-        else:
-            with torch.no_grad():
-                self.artist_embeddings = self.item_tower(self.feature_matrix).cpu().numpy()
         return self
 
     def fit_eval_context(self, train_matrix: pd.DataFrame) -> "TwoTowerRecommender":
@@ -70,7 +67,7 @@ class TwoTowerRecommender:
         ids = torch.tensor([[a for a, _ in history]], dtype=torch.long, device=self.device)
         weights = torch.tensor([[w for _, w in history]], dtype=torch.float32, device=self.device)
         mask = torch.ones_like(weights)
-        context_embeds = self.item_tower(self.feature_matrix[ids.view(-1)]).view(1, ids.shape[1], -1)
+        context_embeds = self._embeddings_tensor[ids]  # precomputed lookup, not an item-tower forward pass
         query = self.user_tower(context_embeds, weights, mask)
         return query.cpu().numpy().ravel()
 
