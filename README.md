@@ -1,3 +1,19 @@
+---
+title: Last.fm Two-Tower Recommender
+emoji: 🎧
+colorFrom: purple
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+<!-- The block above is required Hugging Face Spaces config, read fresh from
+this README on every push -- without it the Space can't tell it's a Docker
+SDK app and fails to build (CONFIG_ERROR). Must be the literal first bytes
+of the file for HF's parser to pick it up. GitHub just renders it as a plain
+metadata block up top. -->
+
 # Last.fm Two-Tower Music Recommender
 
 A two-tower **retrieval / candidate-generation** recommender for music, trained on a self-collected Last.fm dataset and served behind a FAISS + FastAPI endpoint. Type any Last.fm username into the demo and get artist recommendations built from that user's real listening history.
