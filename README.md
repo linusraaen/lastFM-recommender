@@ -59,7 +59,7 @@ flowchart TB
 
     subgraph EVAL[Offline evaluation]
         HOLD[Holdout]
-        M[Recall@k, MAP@k, NDCG, coverage<br/>vs popularity / tag-based / co-listen kNN / ALS]
+        M[Recall, MAP, NDCG at k, coverage<br/>vs popularity / tag-based / co-listen kNN / ALS]
     end
 
     API --> CRAWL
@@ -120,7 +120,7 @@ A play is an implicit positive, and playcount is a graded signal. Positives are 
 
 - `GET /recommend?user=<lastfm_username>&k=20` (FastAPI): live-fetch the user's top artists → build query embedding → FAISS ANN search → ranked artists with tags.
 - Cold-start: falls back to the popularity baseline when a user has no overlap with the training catalogue (private profile, or every top artist is outside it).
-- Latency (local, single request, cold cache): p50 ≈ 1190 ms, p99 ≈ 1220 ms — dominated by the live Last.fm API round-trip (2 sequential rate-limited calls to fetch top artists), not model inference, which is a brute-force FAISS lookup over 129,550 x 128 floats. Dockerised; deploy target is a Hugging Face Space (see "Deploying the demo" below).
+- Latency (local, single request, cold cache): p50 ≈ 1190 ms, p99 ≈ 1220 ms — dominated by the live Last.fm API round-trip (2 sequential rate-limited calls to fetch top artists), not model inference, which is a brute-force FAISS lookup over 129,550 x 128 floats. Dockerised; deployed on Render.
 
 ## Repo structure
 
@@ -143,7 +143,7 @@ scripts/
   stage_artifacts.py       # collects serving artifacts into artifact_dist/ for upload to HF Hub
 tests/                  # pytest suite (synthetic data, no real crawl needed)
 start.sh                # combined FastAPI + Streamlit entrypoint (single-port container hosts)
-render.yaml             # Render blueprint (primary hosting target -- see "Deploying the demo")
+render.yaml             # Render blueprint -- connect this repo in the Render dashboard to deploy
 Makefile
 Dockerfile
 requirements.txt
