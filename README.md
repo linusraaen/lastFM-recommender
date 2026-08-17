@@ -20,7 +20,7 @@ A two-tower **retrieval / candidate-generation** recommender for music, trained 
 
 ## Demo
 
-**Demo:** tested end-to-end locally (FastAPI + Streamlit against the trained model) — not yet deployed to a public URL. _[deploy + link]_
+**Live demo:** [linusraaen-lastfm-recommender-demo.hf.space](https://linusraaen-lastfm-recommender-demo.hf.space) — enter a Last.fm username, get recommendations. Hosted on a Hugging Face Space (Docker SDK).
 
 
 ## Results (headline)
